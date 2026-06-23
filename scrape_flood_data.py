@@ -98,19 +98,31 @@ def scrape_flood_levels():
 
         print(f"[{datetime.now()}] Loading NAM-FDM...")
         page.goto(URL, wait_until="load", timeout=120000)
-        # Extra wait — site has live data feeds so networkidle is never reached;
-        # give JS time to fully render the tabs and widgets
+        # Extra wait — site has live data feeds; give JS time to render
         page.wait_for_timeout(15000)
+        page.screenshot(path="debug_after_load.png")
+        print(f"[{datetime.now()}] Screenshot saved → debug_after_load.png")
 
         # ── Step 1: Current levels from the River Points table ──────────────
+        # Tab IDs are dynamic in Shiny — find tabs by visible text instead
         print(f"[{datetime.now()}] Getting current levels from River Points table...")
-        page.wait_for_selector('a[href="#tab-2416-3"]', timeout=60000)
-        page.click('a[href="#tab-2416-3"]')
+
+        # Print all tab links found on the page for debugging
+        tabs = page.query_selector_all('a[role="tab"], .nav-tabs a, ul.nav a')
+        print(f"  Found {len(tabs)} tab elements:")
+        for t in tabs:
+            print(f"    href={t.get_attribute('href')}  text={t.inner_text().strip()!r}")
+
+        # Click the tab containing "River" or "Points" text
+        page.get_by_role("tab").filter(has_text="River").first.click()
         page.wait_for_timeout(2000)
-        page.wait_for_selector('a[href="#tab-2406-2"]', timeout=60000)
-        page.click('a[href="#tab-2406-2"]')
+        page.screenshot(path="debug_after_tab1.png")
+
+        # Click the sub-tab containing "River Points"
+        page.get_by_role("tab").filter(has_text="River Points").first.click()
         page.wait_for_selector('#DataTables_Table_1 tbody tr', timeout=60000)
         page.wait_for_timeout(3000)
+        page.screenshot(path="debug_after_tab2.png")
 
         rows = page.query_selector_all('#DataTables_Table_1 tbody tr')
         current_levels = {}
@@ -134,8 +146,8 @@ def scrape_flood_levels():
 
         # ── Step 2: Full time series via map marker clicks ──────────────────
         print(f"[{datetime.now()}] Extracting time series from map markers...")
-        page.wait_for_selector('a[href="#tab-2416-1"]', timeout=60000)
-        page.click('a[href="#tab-2416-1"]')  # Back to Current Conditions
+        # Navigate back to Current Conditions tab (the map)
+        page.get_by_role("tab").filter(has_text="Current Conditions").first.click()
         page.wait_for_timeout(3000)
 
         timeseries = extract_dygraph_timeseries(page)
