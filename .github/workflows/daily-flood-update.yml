@@ -2,8 +2,10 @@ name: Daily Flood Data Update
 
 on:
   schedule:
+    # Runs every day at 08:00 UTC (10:00 SAST / CAT)
     - cron: '0 8 * * *'
   workflow_dispatch:
+    # Allows manual trigger from GitHub Actions tab
 
 jobs:
   update-flood-data:
@@ -26,6 +28,14 @@ jobs:
 
       - name: Run scraper
         run: python scrape_flood_data.py
+
+      - name: Upload debug screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-screenshots
+          path: debug_*.png
+          if-no-files-found: ignore
 
       - name: Upload flood_data.json to SiteGround
         run: |
