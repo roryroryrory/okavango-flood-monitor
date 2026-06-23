@@ -97,9 +97,10 @@ def scrape_flood_levels():
         page = browser.new_page()
 
         print(f"[{datetime.now()}] Loading NAM-FDM...")
-        page.goto(URL, wait_until="networkidle", timeout=120000)
-        # Extra wait — cloud runners are slower; give the JS time to render tabs
-        page.wait_for_timeout(5000)
+        page.goto(URL, wait_until="load", timeout=120000)
+        # Extra wait — site has live data feeds so networkidle is never reached;
+        # give JS time to fully render the tabs and widgets
+        page.wait_for_timeout(15000)
 
         # ── Step 1: Current levels from the River Points table ──────────────
         print(f"[{datetime.now()}] Getting current levels from River Points table...")
