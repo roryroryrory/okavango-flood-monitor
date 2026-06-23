@@ -1,0 +1,42 @@
+name: Daily Flood Data Update
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-flood-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Run scraper
+        run: python scrape_flood_data.py
+
+      - name: Upload flood_data.json to SiteGround
+        run: |
+          curl -T flood_data.json \
+            --ftp-create-dirs \
+            --user "${{ secrets.FTP_USER }}:${{ secrets.FTP_PASS }}" \
+            "ftp://${{ secrets.FTP_HOST }}/${{ secrets.FTP_PATH }}/flood_data.json"
+
+      - name: Upload flood_timeseries.json to SiteGround
+        run: |
+          curl -T flood_timeseries.json \
+            --ftp-create-dirs \
+            --user "${{ secrets.FTP_USER }}:${{ secrets.FTP_PASS }}" \
+            "ftp://${{ secrets.FTP_HOST }}/${{ secrets.FTP_PATH }}/flood_timeseries.json"
