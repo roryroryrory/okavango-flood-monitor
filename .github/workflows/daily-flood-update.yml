@@ -42,6 +42,7 @@ jobs:
           curl -T flood_data.json \
             --ftp-create-dirs \
             --ssl \
+            --insecure \
             --user "${{ secrets.FTP_USER }}:${{ secrets.FTP_PASS }}" \
             "ftp://${{ secrets.FTP_HOST }}/${{ secrets.FTP_PATH }}/flood_data.json"
 
@@ -50,5 +51,6 @@ jobs:
           curl -T flood_timeseries.json \
             --ftp-create-dirs \
             --ssl \
+            --insecure \
             --user "${{ secrets.FTP_USER }}:${{ secrets.FTP_PASS }}" \
             "ftp://${{ secrets.FTP_HOST }}/${{ secrets.FTP_PATH }}/flood_timeseries.json"
