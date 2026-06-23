@@ -104,25 +104,27 @@ def scrape_flood_levels():
         print(f"[{datetime.now()}] Screenshot saved → debug_after_load.png")
 
         # ── Step 1: Current levels from the River Points table ──────────────
-        # Tab IDs are dynamic in Shiny — find tabs by visible text instead
+        # Tab IDs are dynamic in Shiny — click by visible text
         print(f"[{datetime.now()}] Getting current levels from River Points table...")
 
-        # Print all tab links found on the page for debugging
-        tabs = page.query_selector_all('a[role="tab"], .nav-tabs a, ul.nav a')
-        print(f"  Found {len(tabs)} tab elements:")
-        for t in tabs:
-            print(f"    href={t.get_attribute('href')}  text={t.inner_text().strip()!r}")
-
-        # Click the tab containing "River" or "Points" text
-        page.get_by_role("tab").filter(has_text="River").first.click()
+        # Click "District Summary" (top-level tab)
+        page.locator("a", has_text="District Summary").first.click()
         page.wait_for_timeout(2000)
         page.screenshot(path="debug_after_tab1.png")
+        print(f"[{datetime.now()}] Clicked District Summary tab")
 
-        # Click the sub-tab containing "River Points"
-        page.get_by_role("tab").filter(has_text="River Points").first.click()
+        # Print sub-tabs for debugging
+        subtabs = page.query_selector_all('.nav-tabs a, .nav-pills a, ul.nav a')
+        print(f"  Sub-tabs visible ({len(subtabs)}):")
+        for t in subtabs:
+            print(f"    href={t.get_attribute('href')}  text={t.inner_text().strip()!r}")
+
+        # Click "River Points" sub-tab
+        page.locator("a", has_text="River Points").first.click()
         page.wait_for_selector('#DataTables_Table_1 tbody tr', timeout=60000)
         page.wait_for_timeout(3000)
         page.screenshot(path="debug_after_tab2.png")
+        print(f"[{datetime.now()}] River Points table loaded")
 
         rows = page.query_selector_all('#DataTables_Table_1 tbody tr')
         current_levels = {}
@@ -147,7 +149,7 @@ def scrape_flood_levels():
         # ── Step 2: Full time series via map marker clicks ──────────────────
         print(f"[{datetime.now()}] Extracting time series from map markers...")
         # Navigate back to Current Conditions tab (the map)
-        page.get_by_role("tab").filter(has_text="Current Conditions").first.click()
+        page.locator("a", has_text="Current Conditions").first.click()
         page.wait_for_timeout(3000)
 
         timeseries = extract_dygraph_timeseries(page)
