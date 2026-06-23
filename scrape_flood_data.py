@@ -97,15 +97,19 @@ def scrape_flood_levels():
         page = browser.new_page()
 
         print(f"[{datetime.now()}] Loading NAM-FDM...")
-        page.goto(URL, wait_until="networkidle", timeout=90000)
+        page.goto(URL, wait_until="networkidle", timeout=120000)
+        # Extra wait — cloud runners are slower; give the JS time to render tabs
+        page.wait_for_timeout(5000)
 
         # ── Step 1: Current levels from the River Points table ──────────────
         print(f"[{datetime.now()}] Getting current levels from River Points table...")
+        page.wait_for_selector('a[href="#tab-2416-3"]', timeout=60000)
         page.click('a[href="#tab-2416-3"]')
-        page.wait_for_timeout(800)
-        page.click('a[href="#tab-2406-2"]')
-        page.wait_for_selector('#DataTables_Table_1 tbody tr', timeout=30000)
         page.wait_for_timeout(2000)
+        page.wait_for_selector('a[href="#tab-2406-2"]', timeout=60000)
+        page.click('a[href="#tab-2406-2"]')
+        page.wait_for_selector('#DataTables_Table_1 tbody tr', timeout=60000)
+        page.wait_for_timeout(3000)
 
         rows = page.query_selector_all('#DataTables_Table_1 tbody tr')
         current_levels = {}
@@ -129,8 +133,9 @@ def scrape_flood_levels():
 
         # ── Step 2: Full time series via map marker clicks ──────────────────
         print(f"[{datetime.now()}] Extracting time series from map markers...")
+        page.wait_for_selector('a[href="#tab-2416-1"]', timeout=60000)
         page.click('a[href="#tab-2416-1"]')  # Back to Current Conditions
-        page.wait_for_timeout(1500)
+        page.wait_for_timeout(3000)
 
         timeseries = extract_dygraph_timeseries(page)
 
