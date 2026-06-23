@@ -1,0 +1,44 @@
+name: Daily Flood Data Update
+
+on:
+  schedule:
+    # Runs every day at 08:00 UTC (10:00 SAST / CAT)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  update-flood-data:
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Run flood scraper
+        run: python scrape_flood_data.py
+
+      - name: Run Divundu chart screenshot
+        run: python scrape_divundu.py
+
+      - name: Commit and push all updated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add flood_data.json flood_timeseries.json divundu_charts.png
+          git diff --staged --quiet || git commit -m "Update flood data and Divundu charts $(date -u '+%Y-%m-%d')"
+          git push
