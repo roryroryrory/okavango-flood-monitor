@@ -56,25 +56,45 @@ def scrape_divundu_charts():
         print(f"[{datetime.now()}] Clicked HYDROLOGY HISTORICAL: {clicked}")
         page.wait_for_timeout(10000)
 
-        # Debug: screenshot of station list page
+        # Debug2: screenshot after clicking HYDROLOGY HISTORICAL
         DEBUG2 = os.path.join(os.path.dirname(__file__), "divundu_debug2.png")
         page.screenshot(path=DEBUG2)
         print(f"[{datetime.now()}] Debug2 screenshot saved")
 
-        # Debug: print all visible text to find Divundu in the list
+        # Click "List Stations" in the sidebar to open station list
+        clicked2 = page.evaluate("""
+            () => {
+                const els = Array.from(document.querySelectorAll('*'));
+                const target = els.find(el =>
+                    el.children.length === 0 &&
+                    el.textContent.trim().toUpperCase().includes('LIST STATION')
+                );
+                if (target) { target.click(); return target.textContent.trim(); }
+                return false;
+            }
+        """)
+        print(f"[{datetime.now()}] Clicked List Stations: {clicked2}")
+        page.wait_for_timeout(8000)
+
+        # Debug3: screenshot of station list
+        DEBUG3 = os.path.join(os.path.dirname(__file__), "divundu_debug3.png")
+        page.screenshot(path=DEBUG3)
+        print(f"[{datetime.now()}] Debug3 screenshot saved")
+
+        # Print all text elements to find Divundu
         all_text = page.evaluate("""
             () => Array.from(document.querySelectorAll('*'))
                 .filter(el => el.children.length === 0 && el.textContent.trim().length > 0)
                 .map(el => el.textContent.trim())
-                .filter(t => t.length < 60)
-                .slice(0, 100)
+                .filter(t => t.length < 80)
+                .slice(0, 150)
         """)
         print(f"[{datetime.now()}] Visible text elements:")
         for t in all_text:
             print(f"  {t!r}")
 
         # Try clicking Divundu in the station list
-        clicked2 = page.evaluate("""
+        clicked3 = page.evaluate("""
             () => {
                 const els = Array.from(document.querySelectorAll('*'));
                 const target = els.find(el =>
@@ -85,7 +105,7 @@ def scrape_divundu_charts():
                 return false;
             }
         """)
-        print(f"[{datetime.now()}] Clicked Divundu station: {clicked2}")
+        print(f"[{datetime.now()}] Clicked Divundu: {clicked3}")
 
         # Wait for charts to render
         page.wait_for_timeout(15000)
