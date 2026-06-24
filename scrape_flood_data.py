@@ -107,6 +107,11 @@ def scrape_flood_levels():
         # Tab IDs are dynamic in Shiny — click by visible text
         print(f"[{datetime.now()}] Getting current levels from River Points table...")
 
+        # Wait for Shiny startup overlay to disappear before clicking
+        print(f"[{datetime.now()}] Waiting for Shiny startup to complete...")
+        page.locator(".shinybusy-startup").wait_for(state="hidden", timeout=60000)
+        print(f"[{datetime.now()}] Shiny ready — clicking tabs...")
+
         # Click "District Summary" (top-level tab)
         page.locator("a", has_text="District Summary").first.click()
         page.wait_for_timeout(2000)
