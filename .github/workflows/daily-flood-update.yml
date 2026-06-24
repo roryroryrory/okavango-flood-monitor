@@ -40,7 +40,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: divundu-debug
-          path: divundu_debug.png
+          path: divundu_debug*.png
           if-no-files-found: ignore
 
       - name: Commit and push all updated files
