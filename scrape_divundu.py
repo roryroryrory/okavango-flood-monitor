@@ -6,7 +6,7 @@ Produces:
   divundu_charts.png  — Water Level + Discharge chart screenshot
 
 Requirements:
-    pip install playwright
+    pip install playwright pillow
     playwright install chromium
 
 Run manually:
@@ -29,44 +29,20 @@ DEBUG2 = os.path.join(os.path.dirname(__file__), "divundu_debug2.png")
 def scrape_divundu_charts():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        # Tall viewport to capture as much content as possible
         page = browser.new_page(viewport={"width": 1440, "height": 1600})
 
-        print(f"[{datetime.now()}] Loading HMMP dashboard (embed URL)...")
+        print(f"[{datetime.now()}] Loading HMMP dashboard...")
         page.goto(URL, wait_until="load", timeout=120000)
         page.wait_for_timeout(20000)
 
-        # Debug1: initial state
+        # Debug1: initial state (full page)
         page.screenshot(path=DEBUG, full_page=True)
-        print(f"[{datetime.now()}] Debug1 screenshot saved")
+        print(f"[{datetime.now()}] Debug1 saved")
 
-        # Print all text to find Divundu element
-        all_text = page.evaluate("""
-            () => {
-                const seen = new Set();
-                return Array.from(document.querySelectorAll('*'))
-                    .filter(el => {
-                        const t = el.textContent.trim();
-                        return t.length > 0 && t.length < 80 && !seen.has(t) && seen.add(t);
-                    })
-                    .map(el => ({
-                        tag: el.tagName,
-                        text: el.textContent.trim(),
-                        children: el.children.length
-                    }))
-                    .slice(0, 200);
-            }
-        """)
-        print(f"[{datetime.now()}] Page text elements:")
-        for item in all_text:
-            print(f"  [{item['tag']} children={item['children']}] {item['text']!r}")
-
-        # Click Divundu
+        # Click Divundu station
         clicked = page.evaluate("""
             () => {
                 const allEls = Array.from(document.querySelectorAll('*'));
-
-                // Strategy 1: exact text match
                 const exact = allEls.filter(el =>
                     el.textContent.trim().toUpperCase() === 'DIVUNDU'
                 );
@@ -75,8 +51,6 @@ def scrape_divundu_charts():
                     leaf.click();
                     return 'exact: ' + leaf.textContent.trim();
                 }
-
-                // Strategy 2: short text containing Divundu
                 const partial = allEls.filter(el =>
                     el.textContent.trim().toUpperCase().includes('DIVUNDU') &&
                     el.textContent.trim().length < 30
@@ -86,42 +60,38 @@ def scrape_divundu_charts():
                     leaf.click();
                     return 'partial: ' + leaf.textContent.trim();
                 }
-
                 return false;
             }
         """)
         print(f"[{datetime.now()}] Clicked Divundu: {clicked}")
 
-        # Wait for charts to render after click
+        # Wait for charts to render
         page.wait_for_timeout(20000)
 
-        # Scroll to bottom to make sure charts are in view
-        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-        page.wait_for_timeout(3000)
-
-        # Debug2: full page after clicking Divundu
-        page.screenshot(path=DEBUG2, full_page=True)
-        print(f"[{datetime.now()}] Debug2 screenshot saved")
-
-        # Print text again to see what changed
-        all_text2 = page.evaluate("""
+        # Scroll to the "Season Periods" / charts section
+        page.evaluate("""
             () => {
-                const seen = new Set();
-                return Array.from(document.querySelectorAll('*'))
-                    .filter(el => {
-                        const t = el.textContent.trim();
-                        return t.length > 0 && t.length < 80 && !seen.has(t) && seen.add(t);
-                    })
-                    .map(el => el.textContent.trim())
-                    .slice(0, 100);
+                const els = Array.from(document.querySelectorAll('*'));
+                // Find the Season Periods banner — charts sit just below it
+                const target = els.find(el =>
+                    el.textContent.trim().toLowerCase().includes('season periods') &&
+                    el.textContent.trim().length < 50
+                );
+                if (target) {
+                    target.scrollIntoView({ behavior: 'instant', block: 'start' });
+                } else {
+                    window.scrollTo(0, document.body.scrollHeight);
+                }
             }
         """)
-        print(f"[{datetime.now()}] Text after click:")
-        for t in all_text2:
-            print(f"  {t!r}")
+        page.wait_for_timeout(2000)
 
-        # Final screenshot (full page)
-        page.screenshot(path=OUTPUT, full_page=True)
+        # Debug2: viewport after scrolling to charts
+        page.screenshot(path=DEBUG2)
+        print(f"[{datetime.now()}] Debug2 saved")
+
+        # Final output: viewport screenshot showing charts
+        page.screenshot(path=OUTPUT)
         print(f"[{datetime.now()}] Chart screenshot saved → {OUTPUT}")
 
         browser.close()
