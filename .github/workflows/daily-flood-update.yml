@@ -35,6 +35,14 @@ jobs:
       - name: Run Divundu chart screenshot
         run: python scrape_divundu.py
 
+      - name: Upload Divundu debug screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: divundu-debug
+          path: divundu_debug.png
+          if-no-files-found: ignore
+
       - name: Commit and push all updated files
         run: |
           git config user.name "github-actions[bot]"
