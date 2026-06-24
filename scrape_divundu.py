@@ -41,11 +41,9 @@ def scrape_divundu_charts():
         page.screenshot(path=DEBUG)
         print(f"[{datetime.now()}] Debug screenshot saved")
 
-        # The welcome/intro page has a "HYDROLOGY HISTORICAL" nav button.
-        # Click it to navigate to the Divundu charts section.
+        # Click HYDROLOGY HISTORICAL nav button
         clicked = page.evaluate("""
             () => {
-                // Try clicking any element containing 'HYDROLOGY HISTORICAL'
                 const els = Array.from(document.querySelectorAll('*'));
                 const target = els.find(el =>
                     el.children.length === 0 &&
@@ -56,8 +54,40 @@ def scrape_divundu_charts():
             }
         """)
         print(f"[{datetime.now()}] Clicked HYDROLOGY HISTORICAL: {clicked}")
+        page.wait_for_timeout(10000)
 
-        # Wait for charts to render after navigation
+        # Debug: screenshot of station list page
+        DEBUG2 = os.path.join(os.path.dirname(__file__), "divundu_debug2.png")
+        page.screenshot(path=DEBUG2)
+        print(f"[{datetime.now()}] Debug2 screenshot saved")
+
+        # Debug: print all visible text to find Divundu in the list
+        all_text = page.evaluate("""
+            () => Array.from(document.querySelectorAll('*'))
+                .filter(el => el.children.length === 0 && el.textContent.trim().length > 0)
+                .map(el => el.textContent.trim())
+                .filter(t => t.length < 60)
+                .slice(0, 100)
+        """)
+        print(f"[{datetime.now()}] Visible text elements:")
+        for t in all_text:
+            print(f"  {t!r}")
+
+        # Try clicking Divundu in the station list
+        clicked2 = page.evaluate("""
+            () => {
+                const els = Array.from(document.querySelectorAll('*'));
+                const target = els.find(el =>
+                    el.children.length === 0 &&
+                    el.textContent.trim().toUpperCase().includes('DIVUNDU')
+                );
+                if (target) { target.click(); return target.textContent.trim(); }
+                return false;
+            }
+        """)
+        print(f"[{datetime.now()}] Clicked Divundu station: {clicked2}")
+
+        # Wait for charts to render
         page.wait_for_timeout(15000)
 
         # Take the final screenshot
