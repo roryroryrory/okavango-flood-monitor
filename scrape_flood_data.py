@@ -104,28 +104,32 @@ def scrape_flood_levels():
         print(f"[{datetime.now()}] Screenshot saved → debug_after_load.png")
 
         # ── Step 1: Current levels from the River Points table ──────────────
-        # Tab IDs are dynamic in Shiny — click by visible text
+        # The shinybusy-startup overlay blocks pointer events and never clears
+        # in headless mode. Use JS clicks to bypass it entirely.
         print(f"[{datetime.now()}] Getting current levels from River Points table...")
 
-        # Wait for Shiny startup overlay to disappear before clicking
-        print(f"[{datetime.now()}] Waiting for Shiny startup to complete...")
-        page.locator(".shinybusy-startup").wait_for(state="hidden", timeout=60000)
-        print(f"[{datetime.now()}] Shiny ready — clicking tabs...")
+        # Remove the overlay via JS so subsequent actions aren't blocked
+        page.evaluate("""
+            const el = document.querySelector('.shinybusy-startup');
+            if (el) el.style.display = 'none';
+        """)
 
-        # Click "District Summary" (top-level tab)
-        page.locator("a", has_text="District Summary").first.click()
-        page.wait_for_timeout(2000)
+        # Click "District Summary" via JS (bypasses pointer-event block)
+        page.evaluate("""
+            Array.from(document.querySelectorAll('a[data-toggle="tab"], a[data-bs-toggle="tab"]'))
+                .find(a => a.textContent.includes('District Summary'))
+                ?.click();
+        """)
+        page.wait_for_timeout(3000)
         page.screenshot(path="debug_after_tab1.png")
         print(f"[{datetime.now()}] Clicked District Summary tab")
 
-        # Print sub-tabs for debugging
-        subtabs = page.query_selector_all('.nav-tabs a, .nav-pills a, ul.nav a')
-        print(f"  Sub-tabs visible ({len(subtabs)}):")
-        for t in subtabs:
-            print(f"    href={t.get_attribute('href')}  text={t.inner_text().strip()!r}")
-
-        # Click "River Points" sub-tab
-        page.locator("a", has_text="River Points").first.click()
+        # Click "River Points" sub-tab via JS
+        page.evaluate("""
+            Array.from(document.querySelectorAll('a[data-toggle="tab"], a[data-bs-toggle="tab"]'))
+                .find(a => a.textContent.includes('River points') || a.textContent.includes('River Points'))
+                ?.click();
+        """)
         page.wait_for_selector('#DataTables_Table_1 tbody tr', timeout=60000)
         page.wait_for_timeout(3000)
         page.screenshot(path="debug_after_tab2.png")
@@ -153,8 +157,12 @@ def scrape_flood_levels():
 
         # ── Step 2: Full time series via map marker clicks ──────────────────
         print(f"[{datetime.now()}] Extracting time series from map markers...")
-        # Navigate back to Current Conditions tab (the map)
-        page.locator("a", has_text="Current Conditions").first.click()
+        # Navigate back to Current Conditions tab (the map) via JS
+        page.evaluate("""
+            Array.from(document.querySelectorAll('a[data-toggle="tab"], a[data-bs-toggle="tab"]'))
+                .find(a => a.textContent.includes('Current Conditions'))
+                ?.click();
+        """)
         page.wait_for_timeout(3000)
 
         timeseries = extract_dygraph_timeseries(page)
