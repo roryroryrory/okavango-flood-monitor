@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-07-14T09:43:25.169552+00:00",
+  "updated_utc": "2026-07-15T09:47:30.591133+00:00",
   "source": "https://hydrology.soton.ac.uk/apps/nam_app/",
   "stations": {
     "RUNDU": {
@@ -13,7 +13,7 @@
     "MUKWE": {
       "id": "1257101",
       "name": "MUKWE (64932102)",
-      "current_flow_m3s": 13.7,
+      "current_flow_m3s": 13.69,
       "current_percentile": 1.0,
       "forecast_10day_max_m3s": 13.68,
       "forecast_10day_max_percentile": 0.0
