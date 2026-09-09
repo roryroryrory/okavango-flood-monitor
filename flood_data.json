@@ -1,21 +1,21 @@
 {
-  "updated_utc": "2026-09-08T12:20:05.976546+00:00",
+  "updated_utc": "2026-09-09T12:32:11.920209+00:00",
   "source": "https://hydrology.soton.ac.uk/apps/nam_app/",
   "stations": {
     "RUNDU": {
       "id": "1257100",
       "name": "RUNDU (64932101)",
-      "current_flow_m3s": 6.74,
+      "current_flow_m3s": 6.73,
       "current_percentile": 1.0,
-      "forecast_10day_max_m3s": 7.09,
-      "forecast_10day_max_percentile": 0.0
+      "forecast_10day_max_m3s": 9.14,
+      "forecast_10day_max_percentile": 16.72
     },
     "MUKWE": {
       "id": "1257101",
       "name": "MUKWE (64932102)",
-      "current_flow_m3s": 13.09,
+      "current_flow_m3s": 13.08,
       "current_percentile": 1.0,
-      "forecast_10day_max_m3s": 13.21,
+      "forecast_10day_max_m3s": 13.49,
       "forecast_10day_max_percentile": 0.0
     }
   }
